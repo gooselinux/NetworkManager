@@ -1,0 +1,12 @@
+diff -up NetworkManager-0.8.1/system-settings/plugins/ifcfg-rh/plugin.c.foo NetworkManager-0.8.1/system-settings/plugins/ifcfg-rh/plugin.c
+--- NetworkManager-0.8.1/system-settings/plugins/ifcfg-rh/plugin.c.foo	2010-07-14 09:33:25.653436070 -0700
++++ NetworkManager-0.8.1/system-settings/plugins/ifcfg-rh/plugin.c	2010-07-14 09:33:34.055400450 -0700
+@@ -462,7 +462,7 @@ plugin_get_hostname (SCPluginIfcfg *plug
+ 	}
+ 
+ 	hostname = svGetValue (network, "HOSTNAME", FALSE);
+-	ignore_localhost = svTrueValue (network, "NM_IGNORE_HOSTNAME_LOCALHOST", FALSE);
++	ignore_localhost = svTrueValue (network, "NM_IGNORE_HOSTNAME_LOCALHOST", TRUE);
+ 	if (ignore_localhost) {
+ 		/* Ignore a hostname of 'localhost' or 'localhost.localdomain' to preserve
+ 		 * 'network' service behavior.

@@ -1,0 +1,314 @@
+diff --git NetworkManager-0.8.1/network-manager-applet-0.8.1/icons/22/Makefile.am NetworkManager-0.8.1/network-manager-applet-0.8.1/icons/22/Makefile.am
+index 3dd7143..a7f4df6 100644
+--- NetworkManager-0.8.1/network-manager-applet-0.8.1/icons/22/Makefile.am
++++ NetworkManager-0.8.1/network-manager-applet-0.8.1/icons/22/Makefile.am
+@@ -3,7 +3,6 @@ icon_DATA = \
+ 	nm-no-connection.png \
+ 	nm-device-wired.png \
+ 	nm-device-wwan.png \
+-	nm-wwan-tower.png \
+ 	nm-adhoc.png \
+ 	nm-stage01-connecting01.png \
+ 	nm-stage01-connecting02.png \
+@@ -58,15 +57,7 @@ icon_DATA = \
+ 	nm-vpn-connecting13.png \
+ 	nm-vpn-connecting14.png \
+ 	nm-vpn-active-lock.png \
+-	nm-secure-lock.png \
+-	nm-tech-cdma-1x.png \
+-	nm-tech-evdo.png \
+-	nm-tech-gprs.png \
+-	nm-tech-edge.png \
+-	nm-tech-umts.png \
+-	nm-tech-hspa.png \
+-	nm-mb-roam.png \
+-	nm-tech-3g.png
++	nm-secure-lock.png
+ 
+ EXTRA_DIST = $(icon_DATA)
+ 
+diff --git NetworkManager-0.8.1/network-manager-applet-0.8.1/icons/22/nm-mb-roam.png NetworkManager-0.8.1/network-manager-applet-0.8.1/icons/22/nm-mb-roam.png
+deleted file mode 100644
+index 9d96555..0000000
+Binary files NetworkManager-0.8.1/network-manager-applet-0.8.1/icons/22/nm-mb-roam.png and /dev/null differ
+diff --git NetworkManager-0.8.1/network-manager-applet-0.8.1/icons/22/nm-tech-3g.png NetworkManager-0.8.1/network-manager-applet-0.8.1/icons/22/nm-tech-3g.png
+deleted file mode 100644
+index b998256..0000000
+Binary files NetworkManager-0.8.1/network-manager-applet-0.8.1/icons/22/nm-tech-3g.png and /dev/null differ
+diff --git NetworkManager-0.8.1/network-manager-applet-0.8.1/icons/22/nm-tech-cdma-1x.png NetworkManager-0.8.1/network-manager-applet-0.8.1/icons/22/nm-tech-cdma-1x.png
+deleted file mode 100644
+index f70f77d..0000000
+Binary files NetworkManager-0.8.1/network-manager-applet-0.8.1/icons/22/nm-tech-cdma-1x.png and /dev/null differ
+diff --git NetworkManager-0.8.1/network-manager-applet-0.8.1/icons/22/nm-tech-edge.png NetworkManager-0.8.1/network-manager-applet-0.8.1/icons/22/nm-tech-edge.png
+deleted file mode 100644
+index f1055a0..0000000
+Binary files NetworkManager-0.8.1/network-manager-applet-0.8.1/icons/22/nm-tech-edge.png and /dev/null differ
+diff --git NetworkManager-0.8.1/network-manager-applet-0.8.1/icons/22/nm-tech-evdo.png NetworkManager-0.8.1/network-manager-applet-0.8.1/icons/22/nm-tech-evdo.png
+deleted file mode 100644
+index ec556ec..0000000
+Binary files NetworkManager-0.8.1/network-manager-applet-0.8.1/icons/22/nm-tech-evdo.png and /dev/null differ
+diff --git NetworkManager-0.8.1/network-manager-applet-0.8.1/icons/22/nm-tech-gprs.png NetworkManager-0.8.1/network-manager-applet-0.8.1/icons/22/nm-tech-gprs.png
+deleted file mode 100644
+index b7dbac0..0000000
+Binary files NetworkManager-0.8.1/network-manager-applet-0.8.1/icons/22/nm-tech-gprs.png and /dev/null differ
+diff --git NetworkManager-0.8.1/network-manager-applet-0.8.1/icons/22/nm-tech-hspa.png NetworkManager-0.8.1/network-manager-applet-0.8.1/icons/22/nm-tech-hspa.png
+deleted file mode 100644
+index 056a982..0000000
+Binary files NetworkManager-0.8.1/network-manager-applet-0.8.1/icons/22/nm-tech-hspa.png and /dev/null differ
+diff --git NetworkManager-0.8.1/network-manager-applet-0.8.1/icons/22/nm-tech-umts.png NetworkManager-0.8.1/network-manager-applet-0.8.1/icons/22/nm-tech-umts.png
+deleted file mode 100644
+index 7bea37f..0000000
+Binary files NetworkManager-0.8.1/network-manager-applet-0.8.1/icons/22/nm-tech-umts.png and /dev/null differ
+diff --git NetworkManager-0.8.1/network-manager-applet-0.8.1/icons/22/nm-wwan-tower.png NetworkManager-0.8.1/network-manager-applet-0.8.1/icons/22/nm-wwan-tower.png
+deleted file mode 100644
+index 5e974bf..0000000
+Binary files NetworkManager-0.8.1/network-manager-applet-0.8.1/icons/22/nm-wwan-tower.png and /dev/null differ
+diff --git NetworkManager-0.8.1/network-manager-applet-0.8.1/src/applet-device-cdma.c NetworkManager-0.8.1/network-manager-applet-0.8.1/src/applet-device-cdma.c
+index f80034b..7f21ed2 100644
+--- NetworkManager-0.8.1/network-manager-applet-0.8.1/src/applet-device-cdma.c
++++ NetworkManager-0.8.1/network-manager-applet-0.8.1/src/applet-device-cdma.c
+@@ -398,7 +398,6 @@ cdma_get_icon (NMDevice *device,
+ 	GdkPixbuf *pixbuf = NULL;
+ 	const char *id;
+ 	CdmaDeviceInfo *info;
+-	gboolean mb_state;
+ 
+ 	info = g_object_get_data (G_OBJECT (device), "devinfo");
+ 	g_assert (info);
+@@ -423,15 +422,14 @@ cdma_get_icon (NMDevice *device,
+ 		*tip = g_strdup_printf (_("Requesting a network address for '%s'..."), id);
+ 		break;
+ 	case NM_DEVICE_STATE_ACTIVATED:
+-		mb_state = cdma_state_to_mb_state (info);
+-		pixbuf = mobile_helper_get_status_pixbuf (info->quality,
+-		                                          info->quality_valid,
+-		                                          mb_state,
+-		                                          cdma_act_to_mb_act (info),
+-		                                          applet);
+-
+-		if ((mb_state != MB_STATE_UNKNOWN) && info->quality_valid) {
+-			gboolean roaming = (mb_state == MB_STATE_ROAMING);
++		pixbuf = nma_icon_check_and_load ("nm-device-wwan", &applet->wwan_icon, applet);
++		if ((info->cdma1x_state || info->evdo_state) && info->quality_valid) {
++			gboolean roaming = FALSE;
++
++			if (info->evdo_state == 3)
++				roaming = TRUE;
++			else if (info->cdma1x_state == 3)
++				roaming = TRUE;
+ 
+ 			*tip = g_strdup_printf (_("Mobile broadband connection '%s' active: (%d%%%s%s)"),
+ 			                        id, info->quality,
+diff --git NetworkManager-0.8.1/network-manager-applet-0.8.1/src/applet-device-gsm.c NetworkManager-0.8.1/network-manager-applet-0.8.1/src/applet-device-gsm.c
+index 939a4a7..0ef4e34 100644
+--- NetworkManager-0.8.1/network-manager-applet-0.8.1/src/applet-device-gsm.c
++++ NetworkManager-0.8.1/network-manager-applet-0.8.1/src/applet-device-gsm.c
+@@ -441,7 +441,6 @@ gsm_get_icon (NMDevice *device,
+ 	GdkPixbuf *pixbuf = NULL;
+ 	const char *id;
+ 	GsmDeviceInfo *info;
+-	guint32 mb_state;
+ 
+ 	info = g_object_get_data (G_OBJECT (device), "devinfo");
+ 	g_assert (info);
+@@ -466,15 +465,9 @@ gsm_get_icon (NMDevice *device,
+ 		*tip = g_strdup_printf (_("Requesting a network address for '%s'..."), id);
+ 		break;
+ 	case NM_DEVICE_STATE_ACTIVATED:
+-		mb_state = gsm_state_to_mb_state (info);
+-		pixbuf = mobile_helper_get_status_pixbuf (info->quality,
+-		                                          info->quality_valid,
+-		                                          mb_state,
+-		                                          gsm_act_to_mb_act (info),
+-		                                          applet);
+-
+-		if ((mb_state != MB_STATE_UNKNOWN) && info->quality_valid) {
+-			gboolean roaming = (mb_state == MB_STATE_ROAMING);
++		pixbuf = nma_icon_check_and_load ("nm-device-wwan", &applet->wwan_icon, applet);
++		if (info->reg_state && info->quality_valid) {
++			gboolean roaming = (info->reg_state == 6);
+ 
+ 			*tip = g_strdup_printf (_("Mobile broadband connection '%s' active: (%d%%%s%s)"),
+ 			                        id, info->quality,
+diff --git NetworkManager-0.8.1/network-manager-applet-0.8.1/src/applet.c NetworkManager-0.8.1/network-manager-applet-0.8.1/src/applet.c
+index a1b6e24..16a8153 100644
+--- NetworkManager-0.8.1/network-manager-applet-0.8.1/src/applet.c
++++ NetworkManager-0.8.1/network-manager-applet-0.8.1/src/applet.c
+@@ -15,7 +15,7 @@
+  * with this program; if not, write to the Free Software Foundation, Inc.,
+  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+  *
+- * Copyright (C) 2004 - 2010 Red Hat, Inc.
++ * Copyright (C) 2004 - 2008 Red Hat, Inc.
+  * Copyright (C) 2005 - 2008 Novell, Inc.
+  *
+  * This applet used the GNOME Wireless Applet as a skeleton to build from.
+@@ -2673,7 +2673,6 @@ static void nma_icons_free (NMApplet *applet)
+ 	nma_clear_icon (&applet->wired_icon, applet);
+ 	nma_clear_icon (&applet->adhoc_icon, applet);
+ 	nma_clear_icon (&applet->wwan_icon, applet);
+-	nma_clear_icon (&applet->wwan_tower_icon, applet);
+ 	nma_clear_icon (&applet->vpn_lock_icon, applet);
+ 	nma_clear_icon (&applet->wireless_00_icon, applet);
+ 	nma_clear_icon (&applet->wireless_25_icon, applet);
+@@ -2682,15 +2681,6 @@ static void nma_icons_free (NMApplet *applet)
+ 	nma_clear_icon (&applet->wireless_100_icon, applet);
+ 	nma_clear_icon (&applet->secure_lock_icon, applet);
+ 
+-	nma_clear_icon (&applet->mb_tech_1x_icon, applet);
+-	nma_clear_icon (&applet->mb_tech_evdo_icon, applet);
+-	nma_clear_icon (&applet->mb_tech_gprs_icon, applet);
+-	nma_clear_icon (&applet->mb_tech_edge_icon, applet);
+-	nma_clear_icon (&applet->mb_tech_umts_icon, applet);
+-	nma_clear_icon (&applet->mb_tech_hspa_icon, applet);
+-	nma_clear_icon (&applet->mb_roaming_icon, applet);
+-	nma_clear_icon (&applet->mb_tech_3g_icon, applet);
+-
+ 	for (i = 0; i < NUM_CONNECTING_STAGES; i++) {
+ 		for (j = 0; j < NUM_CONNECTING_FRAMES; j++)
+ 			nma_clear_icon (&applet->network_connecting_icons[i][j], applet);
+@@ -2743,6 +2733,7 @@ nma_icons_reload (NMApplet *applet)
+ 
+ 	nma_icons_free (applet);
+ 
++
+ 	applet->fallback_icon = gtk_icon_theme_load_icon (applet->icon_theme,
+ 	                                                  FALLBACK_ICON_NAME,
+ 	                                                  applet->icon_size, 0,
+diff --git NetworkManager-0.8.1/network-manager-applet-0.8.1/src/applet.h NetworkManager-0.8.1/network-manager-applet-0.8.1/src/applet.h
+index 82f494b..6cf1fe7 100644
+--- NetworkManager-0.8.1/network-manager-applet-0.8.1/src/applet.h
++++ NetworkManager-0.8.1/network-manager-applet-0.8.1/src/applet.h
+@@ -122,17 +122,6 @@ typedef struct
+ 	GdkPixbuf *		vpn_lock_icon;
+ 	GdkPixbuf *		fallback_icon;
+ 
+-	/* Mobiel Broadband icons */
+-	GdkPixbuf *		wwan_tower_icon;
+-	GdkPixbuf *		mb_tech_1x_icon;
+-	GdkPixbuf *		mb_tech_evdo_icon;
+-	GdkPixbuf *		mb_tech_gprs_icon;
+-	GdkPixbuf *		mb_tech_edge_icon;
+-	GdkPixbuf *		mb_tech_umts_icon;
+-	GdkPixbuf *		mb_tech_hspa_icon;
+-	GdkPixbuf *		mb_roaming_icon;
+-	GdkPixbuf *		mb_tech_3g_icon;
+-
+ 	/* Active status icon pixbufs */
+ 	GdkPixbuf *		icon_layers[ICON_LAYER_MAX + 1];
+ 
+diff --git NetworkManager-0.8.1/network-manager-applet-0.8.1/src/mobile-helpers.c NetworkManager-0.8.1/network-manager-applet-0.8.1/src/mobile-helpers.c
+index 5901c48..2ae8700 100644
+--- NetworkManager-0.8.1/network-manager-applet-0.8.1/src/mobile-helpers.c
++++ NetworkManager-0.8.1/network-manager-applet-0.8.1/src/mobile-helpers.c
+@@ -23,64 +23,6 @@
+ #include "mobile-helpers.h"
+ 
+ GdkPixbuf *
+-mobile_helper_get_status_pixbuf (guint32 quality,
+-                                 gboolean quality_valid,
+-                                 guint32 state,
+-                                 guint32 access_tech,
+-                                 NMApplet *applet)
+-{
+-	GdkPixbuf *pixbuf, *qual_pixbuf, *wwan_pixbuf, *tmp;
+-
+-	wwan_pixbuf = nma_icon_check_and_load ("nm-wwan-tower", &applet->wwan_tower_icon, applet);
+-
+-	if (!quality_valid)
+-		quality = 0;
+-	qual_pixbuf = mobile_helper_get_quality_icon (quality, applet);
+-
+-	pixbuf = gdk_pixbuf_new (GDK_COLORSPACE_RGB,
+-	                         TRUE,
+-	                         gdk_pixbuf_get_bits_per_sample (qual_pixbuf),
+-	                         gdk_pixbuf_get_width (qual_pixbuf),
+-	                         gdk_pixbuf_get_height (qual_pixbuf));
+-	gdk_pixbuf_fill (pixbuf, 0xFFFFFF00);
+-
+-	/* Composite the tower icon into the final icon at the bottom layer */
+-	gdk_pixbuf_composite (wwan_pixbuf, pixbuf,
+-	                      0, 0,
+-	                      gdk_pixbuf_get_width (wwan_pixbuf),
+-						  gdk_pixbuf_get_height (wwan_pixbuf),
+-						  0, 0, 1.0, 1.0,
+-						  GDK_INTERP_BILINEAR, 255);
+-
+-	/* Composite the signal quality onto the icon on top of the WWAN tower */
+-	gdk_pixbuf_composite (qual_pixbuf, pixbuf,
+-	                      0, 0,
+-	                      gdk_pixbuf_get_width (qual_pixbuf),
+-						  gdk_pixbuf_get_height (qual_pixbuf),
+-						  0, 0, 1.0, 1.0,
+-						  GDK_INTERP_BILINEAR, 255);
+-
+-	/* And finally the roaming or technology icon */
+-	if (state == MB_STATE_ROAMING) {
+-		tmp = nma_icon_check_and_load ("nm-mb-roam", &applet->mb_roaming_icon, applet);
+-		gdk_pixbuf_composite (tmp, pixbuf, 0, 0,
+-		                      gdk_pixbuf_get_width (tmp),
+-							  gdk_pixbuf_get_height (tmp),
+-							  0, 0, 1.0, 1.0,
+-							  GDK_INTERP_BILINEAR, 255);
+-	} else {
+-		tmp = mobile_helper_get_tech_icon (access_tech, applet);
+-		gdk_pixbuf_composite (tmp, pixbuf, 0, 0,
+-		                      gdk_pixbuf_get_width (tmp),
+-							  gdk_pixbuf_get_height (tmp),
+-							  0, 0, 1.0, 1.0,
+-							  GDK_INTERP_BILINEAR, 255);
+-	}
+-
+-	return pixbuf;
+-}
+-
+-GdkPixbuf *
+ mobile_helper_get_quality_icon (guint32 quality, NMApplet *applet)
+ {
+ 	if (quality > 80)
+@@ -95,28 +37,3 @@ mobile_helper_get_quality_icon (guint32 quality, NMApplet *applet)
+ 	return nma_icon_check_and_load ("nm-signal-00", &applet->wireless_00_icon, applet);
+ }
+ 
+-GdkPixbuf *
+-mobile_helper_get_tech_icon (guint32 tech, NMApplet *applet)
+-{
+-	switch (tech) {
+-	case MB_TECH_1XRTT:
+-		return nma_icon_check_and_load ("nm-tech-cdma-1x", &applet->mb_tech_1x_icon, applet);
+-	case MB_TECH_EVDO_REV0:
+-	case MB_TECH_EVDO_REVA:
+-		return nma_icon_check_and_load ("nm-tech-evdo", &applet->mb_tech_evdo_icon, applet);
+-	case MB_TECH_GSM:
+-	case MB_TECH_GPRS:
+-		return nma_icon_check_and_load ("nm-tech-gprs", &applet->mb_tech_gprs_icon, applet);
+-	case MB_TECH_EDGE:
+-		return nma_icon_check_and_load ("nm-tech-edge", &applet->mb_tech_edge_icon, applet);
+-	case MB_TECH_UMTS:
+-		return nma_icon_check_and_load ("nm-tech-umts", &applet->mb_tech_umts_icon, applet);
+-	case MB_TECH_HSDPA:
+-	case MB_TECH_HSUPA:
+-	case MB_TECH_HSPA:
+-		return nma_icon_check_and_load ("nm-tech-hspa", &applet->mb_tech_hspa_icon, applet);
+-	default:
+-		return NULL;
+-	}
+-}
+-
+diff --git NetworkManager-0.8.1/network-manager-applet-0.8.1/src/mobile-helpers.h NetworkManager-0.8.1/network-manager-applet-0.8.1/src/mobile-helpers.h
+index fc21328..e6c2bd2 100644
+--- NetworkManager-0.8.1/network-manager-applet-0.8.1/src/mobile-helpers.h
++++ NetworkManager-0.8.1/network-manager-applet-0.8.1/src/mobile-helpers.h
+@@ -49,12 +49,6 @@ enum {
+ 	MB_TECH_HSPA,
+ };
+ 
+-GdkPixbuf *mobile_helper_get_status_pixbuf (guint32 quality,
+-                                            gboolean quality_valid,
+-                                            guint32 state,
+-                                            guint32 access_tech,
+-                                            NMApplet *applet);
+-
+ GdkPixbuf *mobile_helper_get_quality_icon (guint32 quality, NMApplet *applet);
+ 
+ GdkPixbuf *mobile_helper_get_tech_icon (guint32 tech, NMApplet *applet);
