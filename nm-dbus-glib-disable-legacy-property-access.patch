@@ -1,0 +1,144 @@
+diff --git a/configure.ac b/configure.ac
+index 5918c26..adca159 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -202,6 +202,12 @@ dnl
+ AC_CHECK_LIB([dl], [dladdr], LIBDL="-ldl", LIBDL="")
+ AC_SUBST(LIBDL)
+ 
++dnl
++dnl Checks for new dbus-glib property access function
++dnl
++AC_CHECK_LIB([dbus-glib-1], [dbus_glib_global_set_disable_legacy_property_access], ac_have_dg_prop="1", ac_have_dg_prop="0")
++AC_DEFINE_UNQUOTED(HAVE_DBUS_GLIB_DISABLE_LEGACY_PROP_ACCESS, $ac_have_dg_prop, [Define if you have a dbus-glib with dbus_glib_global_set_disable_legacy_property_access()])
++
+ PKG_CHECK_MODULES(DBUS, dbus-1 >= 1.1 dbus-glib-1 >= 0.75)
+ AC_SUBST(DBUS_CFLAGS)
+ AC_SUBST(DBUS_LIBS)
+diff --git a/src/main.c b/src/main.c
+index 1d0ab53..3226cf5 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -19,10 +19,7 @@
+  * Copyright (C) 2005 - 2008 Novell, Inc.
+  */
+ 
+-#ifdef HAVE_CONFIG_H
+-# include <config.h>
+-#endif
+-
++#include <config.h>
+ #include <glib.h>
+ #include <dbus/dbus.h>
+ #include <dbus/dbus-glib-lowlevel.h>
+@@ -616,6 +613,17 @@ main (int argc, char *argv[])
+ 		g_thread_init (NULL);
+ 	dbus_g_thread_init ();
+ 
++#ifndef HAVE_DBUS_GLIB_DISABLE_LEGACY_PROP_ACCESS
++#error HAVE_DBUS_GLIB_DISABLE_LEGACY_PROP_ACCESS not defined
++#endif
++
++#if HAVE_DBUS_GLIB_DISABLE_LEGACY_PROP_ACCESS
++	/* Ensure that non-exported properties don't leak out, and that the
++	 * introspection 'access' permissions are respected.
++	 */
++	dbus_glib_global_set_disable_legacy_property_access ();
++#endif
++
+ 	setup_signals ();
+ 
+ 	nm_logging_start (become_daemon);
+diff -up NetworkManager-0.8.1/src/nm-wifi-ap.c.dbus-glib-no-legacy-props NetworkManager-0.8.1/src/nm-wifi-ap.c
+--- NetworkManager-0.8.1/src/nm-wifi-ap.c.dbus-glib-no-legacy-props	2010-06-28 15:16:57.000000000 -0700
++++ NetworkManager-0.8.1/src/nm-wifi-ap.c	2010-06-30 14:29:23.327591624 -0700
+@@ -153,6 +153,8 @@ set_property (GObject *object, guint pro
+ 	case PROP_STRENGTH:
+ 		nm_ap_set_strength (ap, g_value_get_char (value));
+ 		break;
++	case PROP_HW_ADDRESS:
++		break;
+ 	default:
+ 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+ 		break;
+@@ -242,7 +244,7 @@ nm_ap_class_init (NMAccessPointClass *ap
+ 							NM_802_11_AP_FLAGS_NONE,
+ 							NM_802_11_AP_FLAGS_PRIVACY,
+ 							NM_802_11_AP_FLAGS_NONE,
+-							G_PARAM_READWRITE));
++							G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+ 
+ 	g_object_class_install_property
+ 		(object_class, PROP_WPA_FLAGS,
+@@ -252,7 +254,7 @@ nm_ap_class_init (NMAccessPointClass *ap
+ 							NM_802_11_AP_SEC_NONE,
+ 							all_sec_flags,
+ 							NM_802_11_AP_SEC_NONE,
+-							G_PARAM_READWRITE));
++							G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+ 
+ 	g_object_class_install_property
+ 		(object_class, PROP_RSN_FLAGS,
+@@ -262,7 +264,7 @@ nm_ap_class_init (NMAccessPointClass *ap
+ 							NM_802_11_AP_SEC_NONE,
+ 							all_sec_flags,
+ 							NM_802_11_AP_SEC_NONE,
+-							G_PARAM_READWRITE));
++							G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+ 
+ 	g_object_class_install_property
+ 		(object_class, PROP_SSID,
+@@ -270,7 +272,7 @@ nm_ap_class_init (NMAccessPointClass *ap
+ 	                         "SSID",
+ 	                         "SSID",
+ 	                         DBUS_TYPE_G_UCHAR_ARRAY,
+-	                         G_PARAM_READWRITE));
++	                         G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+ 
+ 	g_object_class_install_property
+ 		(object_class, PROP_FREQUENCY,
+@@ -278,7 +280,7 @@ nm_ap_class_init (NMAccessPointClass *ap
+ 							"Frequency",
+ 							"Frequency",
+ 							0, 10000, 0,
+-							G_PARAM_READWRITE));
++							G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+ 
+ 	g_object_class_install_property
+ 		(object_class, PROP_HW_ADDRESS,
+@@ -286,7 +288,7 @@ nm_ap_class_init (NMAccessPointClass *ap
+ 							  "MAC Address",
+ 							  "Hardware MAC address",
+ 							  NULL,
+-							  G_PARAM_READABLE));
++							  G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+ 	
+ 	g_object_class_install_property
+ 		(object_class, PROP_MODE,
+@@ -294,7 +296,7 @@ nm_ap_class_init (NMAccessPointClass *ap
+ 						   "Mode",
+ 						   "Mode",
+ 						   NM_802_11_MODE_ADHOC, NM_802_11_MODE_INFRA, NM_802_11_MODE_INFRA,
+-						   G_PARAM_READWRITE));
++						   G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+ 
+ 	g_object_class_install_property
+ 		(object_class, PROP_MAX_BITRATE,
+@@ -302,7 +304,7 @@ nm_ap_class_init (NMAccessPointClass *ap
+ 							"Max Bitrate",
+ 							"Max Bitrate",
+ 							0, G_MAXUINT16, 0,
+-							G_PARAM_READWRITE));
++							G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+ 
+ 	g_object_class_install_property
+ 		(object_class, PROP_STRENGTH,
+@@ -310,7 +312,7 @@ nm_ap_class_init (NMAccessPointClass *ap
+ 							"Strength",
+ 							"Strength",
+ 							G_MININT8, G_MAXINT8, 0,
+-							G_PARAM_READWRITE));
++							G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+ 
+ 	/* Signals */
+ 	signals[PROPERTIES_CHANGED] = 

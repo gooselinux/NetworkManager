@@ -1,0 +1,175 @@
+diff -up NetworkManager-0.8.1/network-manager-applet-0.8.1/configure.ac.buildfix NetworkManager-0.8.1/network-manager-applet-0.8.1/configure.ac
+--- NetworkManager-0.8.1/network-manager-applet-0.8.1/configure.ac.buildfix	2009-07-28 10:01:26.000000000 -0400
++++ NetworkManager-0.8.1/network-manager-applet-0.8.1/configure.ac	2009-07-28 13:11:39.261718877 -0400
+@@ -70,10 +70,6 @@ PKG_CHECK_MODULES(GOBJECT, gobject-2.0)
+ PKG_CHECK_MODULES(NMA,
+ 		[dbus-glib-1 >= 0.74
+ 		 glib-2.0 >= 2.16
+-		 NetworkManager >= 0.8.1
+-		 libnm-glib >= 0.8.1
+-		 libnm-util >= 0.8.1
+-		 libnm-glib-vpn >= 0.8.1
+ 		 gtk+-2.0 >= 2.14
+ 		 libglade-2.0
+ 		 gmodule-export-2.0
+@@ -192,9 +188,7 @@ AC_SUBST(DBUS_SYS_DIR)
+ dnl Check for gnome-bluetooth
+ PKG_CHECK_MODULES(GNOME_BLUETOOTH,
+ 		  gconf-2.0
+-		  gnome-bluetooth-1.0 >= 2.27.6
+-		  libnm-util >= 0.8.1
+-		  libnm-glib >= 0.8.1,
++		  gnome-bluetooth-1.0 >= 2.27.6,
+ 		  have_gbt=yes, have_gbt=no)
+ AM_CONDITIONAL(HAVE_GBT, test x"$have_gbt" = "xyes")
+ 
+diff -up NetworkManager-0.8.1/network-manager-applet-0.8.1/src/connection-editor/Makefile.am.buildfix NetworkManager-0.8.1/network-manager-applet-0.8.1/src/connection-editor/Makefile.am
+--- NetworkManager-0.8.1/network-manager-applet-0.8.1/src/connection-editor/Makefile.am.buildfix	2009-07-23 10:51:39.000000000 -0400
++++ NetworkManager-0.8.1/network-manager-applet-0.8.1/src/connection-editor/Makefile.am	2009-07-28 11:29:11.685841724 -0400
+@@ -1,5 +1,9 @@
+ bin_PROGRAMS = nm-connection-editor
+ 
++INCLUDES = -I${top_srcdir}/../include \
++           -I${top_srcdir}/../libnm-util \
++           -I${top_srcdir}/../libnm-glib
++
+ nm_connection_editor_CPPFLAGS = \
+ 	$(NMA_CFLAGS) \
+ 	-DICONDIR=\""$(datadir)/icons"\" \
+@@ -63,7 +67,10 @@ nm_connection_editor_LDADD = \
+ 	${top_builddir}/src/utils/libutils.la \
+ 	${top_builddir}/src/marshallers/libmarshallers.la \
+ 	$(NMA_LIBS) \
+-	-lm
++	-lm \
++	-L${top_builddir}/../libnm-util $(top_builddir)/../libnm-util/libnm-util.la \
++	-L${top_builddir}/../libnm-glib $(top_builddir)/../libnm-glib/libnm-glib.la \
++	-L${top_builddir}/../libnm-glib $(top_builddir)/../libnm-glib/libnm-glib-vpn.la
+ 
+ gladedir = $(datadir)/nm-applet
+ glade_DATA = \
+diff -up NetworkManager-0.8.1/network-manager-applet-0.8.1/src/gconf-helpers/Makefile.am.buildfix NetworkManager-0.8.1/network-manager-applet-0.8.1/src/gconf-helpers/Makefile.am
+--- NetworkManager-0.8.1/network-manager-applet-0.8.1/src/gconf-helpers/Makefile.am.buildfix	2009-04-20 07:09:10.000000000 -0400
++++ NetworkManager-0.8.1/network-manager-applet-0.8.1/src/gconf-helpers/Makefile.am	2009-07-28 11:29:11.686841642 -0400
+@@ -1,3 +1,7 @@
++INCLUDES = -I${top_srcdir}/../include \
++           -I${top_srcdir}/../libnm-util \
++           -I${top_srcdir}/../libnm-glib
++
+ noinst_LTLIBRARIES = libgconf-helpers.la
+ 
+ libgconf_helpers_la_SOURCES =	\
+@@ -19,5 +23,7 @@ libgconf_helpers_la_CPPFLAGS = \
+ libgconf_helpers_la_LIBADD = \
+ 	$(NMA_LIBS) \
+ 	${top_builddir}/src/marshallers/libmarshallers.la \
+-	${top_builddir}/src/utils/libutils.la
++	${top_builddir}/src/utils/libutils.la \
++	-L${top_builddir}/../libnm-util $(top_builddir)/../libnm-util/libnm-util.la \
++	-L${top_builddir}/../libnm-glib $(top_builddir)/../libnm-glib/libnm-glib.la
+ 
+diff -up NetworkManager-0.8.1/network-manager-applet-0.8.1/src/gnome-bluetooth/Makefile.am.buildfix NetworkManager-0.8.1/network-manager-applet-0.8.1/src/gnome-bluetooth/Makefile.am
+--- NetworkManager-0.8.1/network-manager-applet-0.8.1/src/gnome-bluetooth/Makefile.am.buildfix	2009-07-28 13:23:40.282718683 -0400
++++ NetworkManager-0.8.1/network-manager-applet-0.8.1/src/gnome-bluetooth/Makefile.am	2009-07-28 13:24:56.316719077 -0400
+@@ -6,6 +6,9 @@ INCLUDES = \
+ 	-I$(top_builddir) \
+ 	-I${top_builddir}/src/marshallers \
+ 	-I${top_srcdir}/src/utils \
++	-I${top_srcdir}/../include \
++	-I${top_srcdir}/../libnm-util \
++	-I${top_srcdir}/../libnm-glib \
+ 	$(GNOME_BLUETOOTH_CFLAGS) \
+ 	$(DISABLE_DEPRECATED) \
+ 	$(WARN_CFLAGS)
+@@ -14,7 +17,9 @@ plugin_LTLIBRARIES = libnma.la
+ 
+ libnma_la_LIBADD = \
+ 	$(top_builddir)/src/gconf-helpers/libgconf-helpers.la \
+-	$(GNOME_BLUETOOTH_LIBS)
++	$(GNOME_BLUETOOTH_LIBS) \
++	-L${top_builddir}/../libnm-util $(top_builddir)/../libnm-util/libnm-util.la \
++	-L${top_builddir}/../libnm-glib $(top_builddir)/../libnm-glib/libnm-glib.la
+ endif
+ 
+ EXTRA_DIST = $(BT_WIDGET_SOURCES)
+diff -up NetworkManager-0.8.1/network-manager-applet-0.8.1/src/Makefile.am.buildfix NetworkManager-0.8.1/network-manager-applet-0.8.1/src/Makefile.am
+--- NetworkManager-0.8.1/network-manager-applet-0.8.1/src/Makefile.am.buildfix	2009-07-27 15:26:53.000000000 -0400
++++ NetworkManager-0.8.1/network-manager-applet-0.8.1/src/Makefile.am	2009-07-28 11:29:11.686841642 -0400
+@@ -2,6 +2,10 @@ SUBDIRS = marshallers utils gconf-helper
+ 
+ bin_PROGRAMS = nm-applet
+ 
++INCLUDES = -I${top_srcdir}/../include \
++           -I${top_srcdir}/../libnm-util \
++           -I${top_srcdir}/../libnm-glib
++
+ nm_applet_CPPFLAGS = \
+ 	$(NMA_CFLAGS) \
+ 	$(NOTIFY_CFLAGS) \
+@@ -54,7 +58,9 @@ nm_applet_LDADD = \
+ 	${top_builddir}/src/marshallers/libmarshallers.la \
+ 	${top_builddir}/src/utils/libutils.la \
+ 	${top_builddir}/src/gconf-helpers/libgconf-helpers.la \
+-	${top_builddir}/src/wireless-security/libwireless-security.la
++	${top_builddir}/src/wireless-security/libwireless-security.la \
++	-L${top_srcdir}/../libnm-util $(top_builddir)/../libnm-util/libnm-util.la \
++	-L${top_srcdir}/../libnm-glib $(top_builddir)/../libnm-glib/libnm-glib.la
+ 
+ gladedir = $(datadir)/nm-applet
+ glade_DATA = applet.glade keyring.png
+diff -up NetworkManager-0.8.1/network-manager-applet-0.8.1/src/utils/Makefile.am.buildfix NetworkManager-0.8.1/network-manager-applet-0.8.1/src/utils/Makefile.am
+--- NetworkManager-0.8.1/network-manager-applet-0.8.1/src/utils/Makefile.am.buildfix	2009-07-02 16:32:26.000000000 -0400
++++ NetworkManager-0.8.1/network-manager-applet-0.8.1/src/utils/Makefile.am	2009-07-28 11:29:11.686841642 -0400
+@@ -1,5 +1,9 @@
+ SUBDIRS=. tests
+ 
++INCLUDES = -I${top_srcdir}/../include \
++           -I${top_srcdir}/../libnm-util \
++           -I${top_srcdir}/../libnm-glib
++
+ noinst_LTLIBRARIES = libutils.la
+ 
+ libutils_la_SOURCES = \
+@@ -18,4 +22,7 @@ libutils_la_CPPFLAGS = \
+ 	-I${top_srcdir}/src/gconf-helpers \
+ 	-I${top_srcdir}/src
+ 
+-libutils_la_LIBADD = $(NMA_LIBS)
++libutils_la_LIBADD = $(NMA_LIBS) \
++	-L${top_builddir}/../libnm-util $(top_builddir)/../libnm-util/libnm-util.la \
++	-L${top_builddir}/../libnm-glib $(top_builddir)/../libnm-glib/libnm-glib.la
++
+diff -up NetworkManager-0.8.1/network-manager-applet-0.8.1/src/utils/tests/Makefile.am.buildfix NetworkManager-0.8.1/network-manager-applet-0.8.1/src/utils/tests/Makefile.am
+--- NetworkManager-0.8.1/network-manager-applet-0.8.1/src/utils/tests/Makefile.am.buildfix	2009-07-02 16:32:26.000000000 -0400
++++ NetworkManager-0.8.1/network-manager-applet-0.8.1/src/utils/tests/Makefile.am	2009-07-28 11:29:11.686841642 -0400
+@@ -1,4 +1,7 @@
+-INCLUDES = -I$(top_srcdir)/src/utils
++INCLUDES = -I$(top_srcdir)/src/utils \
++           -I${top_srcdir}/../include \
++           -I${top_srcdir}/../libnm-util \
++           -I${top_srcdir}/../libnm-glib
+ 
+ noinst_PROGRAMS = test-utils
+ 
+diff -up NetworkManager-0.8.1/network-manager-applet-0.8.1/src/wireless-security/Makefile.am.buildfix NetworkManager-0.8.1/network-manager-applet-0.8.1/src/wireless-security/Makefile.am
+--- NetworkManager-0.8.1/network-manager-applet-0.8.1/src/wireless-security/Makefile.am.buildfix	2009-07-02 16:32:26.000000000 -0400
++++ NetworkManager-0.8.1/network-manager-applet-0.8.1/src/wireless-security/Makefile.am	2009-07-28 11:29:11.687841490 -0400
+@@ -1,5 +1,9 @@
+ noinst_LTLIBRARIES = libwireless-security.la
+ 
++INCLUDES = -I${top_srcdir}/../include \
++           -I${top_srcdir}/../libnm-util \
++           -I${top_srcdir}/../libnm-glib
++
+ libwireless_security_la_SOURCES = \
+ 	wireless-security.h \
+ 	wireless-security.c \
+@@ -36,5 +40,7 @@ libwireless_security_la_CPPFLAGS = \
+ libwireless_security_la_LIBADD = \
+ 	$(NMA_LIBS) \
+ 	${top_builddir}/src/utils/libutils.la \
+-	${top_builddir}/src/gconf-helpers/libgconf-helpers.la
++	${top_builddir}/src/gconf-helpers/libgconf-helpers.la \
++	-L${top_srcdir}/../libnm-util $(top_builddir)/../libnm-util/libnm-util.la \
++	-L${top_srcdir}/../libnm-glib $(top_builddir)/../libnm-glib/libnm-glib.la
+ 

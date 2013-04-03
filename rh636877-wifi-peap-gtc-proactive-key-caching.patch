@@ -1,0 +1,73 @@
+commit facaba7bab23c254843c1e31992c2d49e7e80aa5
+Author: Dan Williams <dcbw@redhat.com>
+Date:   Fri Sep 24 14:12:58 2010 -0500
+
+    wifi: use PMKSA caching with PEAP-GTC (rh #615032) (rh #636877)
+    
+    We don't want to require a full 802.1x reauth when using OTP tokens
+    and roaming between APs in the same ESS, since that takes a long time
+    (user has to find the token and type in the code).
+
+commit 44cfbf201f90459b3f4098413a87e3280d770477
+Author: Dan Williams <dcbw@redhat.com>
+Date:   Tue Sep 28 14:18:34 2010 -0500
+
+    wifi: allow proactive_key_caching through the supplicant settings filter (rh #615032) (rh #636877)
+    
+    This makes 596cf1a232d33c0dbeee61d8e927d7a09f40159f actually work.
+
+
+diff --git a/src/supplicant-manager/nm-supplicant-config.c b/src/supplicant-manager/nm-supplicant-config.c
+index b516de5..e33f67a 100644
+--- a/src/supplicant-manager/nm-supplicant-config.c
++++ b/src/supplicant-manager/nm-supplicant-config.c
+@@ -711,6 +711,8 @@ nm_supplicant_config_add_setting_8021x (NMSupplicantConfig *self,
+ 	gboolean success, added;
+ 	GString *phase1, *phase2;
+ 	const GByteArray *array;
++	gboolean peap = FALSE;
++	guint32 i, num_eap;
+ 
+ 	g_return_val_if_fail (NM_IS_SUPPLICANT_CONFIG (self), FALSE);
+ 	g_return_val_if_fail (setting != NULL, FALSE);
+@@ -733,6 +735,28 @@ nm_supplicant_config_add_setting_8021x (NMSupplicantConfig *self,
+ 
+ 	ADD_STRING_LIST_VAL (setting, 802_1x, eap_method, eap_methods, "eap", TRUE, FALSE);
+ 
++	/* Check for PEAP + GTC */
++	num_eap = nm_setting_802_1x_get_num_eap_methods (setting);
++	for (i = 0; i < num_eap; i++) {
++		const char *method = nm_setting_802_1x_get_eap_method (setting, i);
++
++		if (method && (strcasecmp (method, "peap") == 0)) {
++			peap = TRUE;
++			break;
++		}
++	}
++
++	/* When using PEAP-GTC, we're likely using Cisco kit, so we want to turn
++	 * on PMKSA caching so that roaming between access points actually works
++	 * without a full reauth (which requires a new token code).  We may want
++	 * to extend this to all PEAP phase2 methods at some point.
++	 */
++	value = nm_setting_802_1x_get_phase2_auth (setting);
++	if (peap && value && (strcasecmp (value, "gtc") == 0)) {
++		if (!nm_supplicant_config_add_option (self, "proactive_key_caching", "1", -1, FALSE))
++			return FALSE;
++	}
++
+ 	/* Drop the fragment size a bit for better compatibility */
+ 	if (!nm_supplicant_config_add_option (self, "fragment_size", "1300", -1, FALSE))
+ 		return FALSE;
+diff --git a/src/supplicant-manager/nm-supplicant-settings-verify.c b/src/supplicant-manager/nm-supplicant-settings-verify.c
+index 2833465..c65af4d 100644
+--- a/src/supplicant-manager/nm-supplicant-settings-verify.c
++++ b/src/supplicant-manager/nm-supplicant-settings-verify.c
+@@ -123,6 +123,7 @@ static const struct Opt opt_table[] = {
+ 	{ "engine_id",          TYPE_BYTES,   0, 0, FALSE,  NULL },
+ 	{ "key_id",             TYPE_BYTES,   0, 0, FALSE,  NULL },
+ 	{ "fragment_size",      TYPE_INT,     1, 2000, FALSE,  NULL },
++	{ "proactive_key_caching", TYPE_INT,  0, 1, FALSE,  NULL },
+ };
+ 
+ 
